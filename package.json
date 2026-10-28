@@ -1,0 +1,39 @@
+{
+  "name": "flash-sale-platform",
+  "version": "1.0.0",
+  "description": "High-concurrency flash sale platform built with Node.js, Redis atomic tokens, RabbitMQ async queue, and PostgreSQL persistence",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "worker": "node src/workers/orderWorker.js",
+    "dev:worker": "node --watch src/workers/orderWorker.js",
+    "reconciler": "node src/workers/reconciler.js",
+    "dev:reconciler": "node --watch src/workers/reconciler.js",
+    "migrate": "node src/database/migrate.js",
+    "seed": "node src/database/seed.js",
+    "seed:redis": "node src/database/seedRedis.js",
+    "setup": "npm run migrate && npm run seed && npm run seed:redis"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.4",
+    "bcrypt": "^5.1.1",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0",
+    "ioredis": "^5.4.1",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "pg": "^8.12.0",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
