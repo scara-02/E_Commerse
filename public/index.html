@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="NEXUS Flagship Store - Premium Computing, Audio, Wearables & Limited Flash Deals.">
+    <title>NEXUS | Premium Hardware & Flash Deals</title>
+    
+    <!-- DNS Prefetch & Preconnect for Edge CDN / API -->
+    <link rel="dns-prefetch" href="//localhost:3000">
+    <link rel="preconnect" href="http://localhost:3000" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Cloudflare Turnstile Bot Protection -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <!-- ─── Top Bar / Utility Announcement ─── -->
+    <div class="top-bar">
+        <div class="top-bar-inner">
+            <span class="top-announcement">
+                <span class="badge-pulse">⚡ LIVE SALE</span> Festival Flash Sale is live · Use code <strong>FESTIVAL10</strong> for 10% off cart items
+            </span>
+            <div class="top-metrics">
+                <span class="server-clock" id="serverClock" title="Synchronized edge cluster timestamp">--:--:--</span>
+                <span class="node-badge" id="nodeBadge" title="Serving API Pod / Upstream Load Balancer">⚡ Pod: Standby</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Main Navigation ─── -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <!-- Brand -->
+            <a href="#" class="nav-brand" onclick="filterCategory('All')">
+                <span class="brand-logo">⚡</span>
+                <span class="brand-name">NEXUS<span class="brand-dot">.</span></span>
+            </a>
+
+            <!-- Search Bar -->
+            <div class="nav-search-wrap">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="Search devices, audio, computing... (Press / to search)" oninput="handleSearch(this.value)">
+                <button class="search-clear" id="searchClear" onclick="clearSearch()" style="display:none;">✕</button>
+            </div>
+
+            <!-- Nav Actions -->
+            <div class="nav-actions">
+                <button class="nav-icon-btn" id="ordersNavBtn" onclick="toggleOrdersDrawer()" title="My Orders">
+                    <span class="icon">📦</span>
+                    <span class="nav-btn-label">Orders</span>
+                </button>
+
+                <button class="nav-icon-btn cart-trigger" id="cartNavBtn" onclick="toggleCartDrawer()" title="Shopping Cart">
+                    <span class="icon">🛒</span>
+                    <span class="nav-btn-label">Cart</span>
+                    <span class="cart-badge" id="cartBadge" style="display:none;">0</span>
+                </button>
+
+                <div class="auth-wrapper" id="authWrapper">
+                    <button class="nav-btn nav-btn-primary" id="loginBtn" onclick="showAuthModal('login')">Sign In</button>
+                    
+                    <div class="user-menu" id="userMenu" style="display:none;">
+                        <button class="user-pill" onclick="toggleUserDropdown()">
+                            <span class="user-avatar" id="userAvatar">U</span>
+                            <span class="user-name" id="usernameDisplay">User</span>
+                            <span class="dropdown-arrow">▾</span>
+                        </button>
+                        <div class="user-dropdown" id="userDropdown" style="display:none;">
+                            <div class="user-info-header">
+                                <strong id="menuFullname">Signed in as</strong>
+                                <span class="user-role" id="menuAccountStatus">Eligible Customer</span>
+                            </div>
+                            <hr class="dropdown-divider">
+                            <button class="dropdown-item" onclick="toggleOrdersDrawer(); toggleUserDropdown();">📦 My Orders</button>
+                            <button class="dropdown-item" onclick="showAccountModal(); toggleUserDropdown();">👤 Account Details</button>
+                            <hr class="dropdown-divider">
+                            <button class="dropdown-item logout-item" onclick="logout()">🚪 Sign Out</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ─── Category Quick Bar ─── -->
+    <div class="category-bar">
+        <div class="category-scroll" id="categoryTabs">
+            <button class="cat-pill active" onclick="filterCategory('All')">All Products</button>
+            <button class="cat-pill flash-deal-pill" onclick="filterCategory('⚡ Flash Deals')">⚡ Flash Deals</button>
+            <button class="cat-pill" onclick="filterCategory('Smartphones')">Smartphones</button>
+            <button class="cat-pill" onclick="filterCategory('Audio')">Audio & Acoustics</button>
+            <button class="cat-pill" onclick="filterCategory('Wearables')">Wearables</button>
+            <button class="cat-pill" onclick="filterCategory('Computing')">Computing</button>
+            <button class="cat-pill" onclick="filterCategory('Accessories')">Accessories</button>
+        </div>
+    </div>
+
+    <!-- ─── Main Content ─── -->
+    <main class="main-layout">
+        <!-- ─── Hero Spotlight: Flash Sale Hero ─── -->
+        <section class="hero-spotlight" id="flashSaleHero">
+            <div class="hero-backdrop"></div>
+            <div class="hero-grid">
+                <div class="hero-visual">
+                    <div class="hero-badge-row">
+                        <span class="hero-tag">⚡ HIGH DEMAND FLASH SALE</span>
+                        <span class="hero-tag quota-tag">1 UNIT PER CUSTOMER</span>
+                    </div>
+                    <div class="hero-image-frame">
+                        <img src="https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=800&auto=format&fit=crop&q=80" alt="Festival Edition Smartphone" id="heroProductImg" class="hero-img">
+                        <div class="floating-spec-pill spec-1">120Hz AMOLED</div>
+                        <div class="floating-spec-pill spec-2">108MP Studio Cam</div>
+                        <div class="floating-spec-pill spec-3">5000mAh 65W</div>
+                    </div>
+                </div>
+
+                <div class="hero-content">
+                    <div class="hero-countdown-block">
+                        <span class="countdown-label">FLASH SALE CLOSING IN</span>
+                        <div class="countdown-digits" id="heroCountdown">
+                            <span class="digit" id="hours">00</span><span class="colon">:</span>
+                            <span class="digit" id="minutes">00</span><span class="colon">:</span>
+                            <span class="digit" id="seconds">00</span>
+                        </div>
+                    </div>
+
+                    <h1 class="hero-title" id="heroTitle">Festival Edition Smartphone</h1>
+                    <p class="hero-desc" id="heroDesc">
+                        Limited batch flagship engineered with ultra-high grade titanium chassis, 256GB NVMe storage, and 8GB LPDDR5 RAM.
+                    </p>
+
+                    <div class="hero-stock-block">
+                        <div class="stock-header">
+                            <span class="stock-live-label"><span class="stock-pulse"></span> Stock Allocation</span>
+                            <span class="stock-count-text" id="stockText">500 units available</span>
+                        </div>
+                        <div class="stock-meter">
+                            <div class="stock-meter-fill" id="stockMeterFill" style="width: 100%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="hero-pricing">
+                        <div class="price-current">₹29,999</div>
+                        <div class="price-original">₹49,999</div>
+                        <div class="discount-badge">40% OFF</div>
+                    </div>
+
+                    <!-- Cloudflare Turnstile Box (Hidden when disabled) -->
+                    <div class="turnstile-wrapper" id="turnstileWrapper">
+                        <div class="cf-turnstile" data-sitekey="1x00000000000000000000AA" data-callback="onTurnstileSuccess" data-theme="dark"></div>
+                    </div>
+
+                    <div class="hero-actions">
+                        <button class="btn btn-primary btn-large btn-flash" id="buyButton" onclick="triggerHeroCheckout()">
+                            <span class="btn-text" id="buyText">⚡ Instant Buy (High-Speed Queue)</span>
+                            <span class="btn-loader" id="buyLoader" style="display:none;">
+                                <span class="spinner"></span> Securing Token...
+                            </span>
+                        </button>
+                        <button class="btn btn-secondary btn-large" onclick="addHeroToCart()">
+                            🛒 Add to Cart
+                        </button>
+                    </div>
+
+                    <div class="hero-perks">
+                        <span class="perk-item">✓ Atomic Lock</span>
+                        <span class="perk-item">✓ Zero Overselling Guarantee</span>
+                        <span class="perk-item">✓ Dispatched in 24h</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ─── Store Catalog Section ─── -->
+        <section class="catalog-section">
+            <div class="catalog-header">
+                <div>
+                    <h2 class="section-heading" id="catalogTitle">Curated Flagships</h2>
+                    <p class="section-subheading" id="catalogSubtitle">Explore our high-performance hardware, audio, and accessories</p>
+                </div>
+                <div class="catalog-controls">
+                    <span class="products-count" id="productsCountText">Showing 8 devices</span>
+                    <div class="sort-select-wrapper">
+                        <label for="sortSelect">Sort:</label>
+                        <select id="sortSelect" onchange="handleSort(this.value)">
+                            <option value="featured">Featured First</option>
+                            <option value="price_asc">Price: Low to High</option>
+                            <option value="price_desc">Price: High to Low</option>
+                            <option value="rating_desc">Top Customer Rated</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products Grid -->
+            <div class="products-grid" id="productsGrid">
+                <!-- Dynamically loaded via app.js -->
+            </div>
+        </section>
+
+        <!-- ─── Queue / Reservation Status Modal ─── -->
+        <div class="modal-overlay" id="queueStatusOverlay" style="display:none;">
+            <div class="queue-card">
+                <div class="queue-card-header">
+                    <div class="queue-title-wrap">
+                        <span class="queue-icon">⚡</span>
+                        <div>
+                            <h3>Distributed Order Processing</h3>
+                            <p class="queue-subtitle">Reservation Token: <code id="queueTokenText">—</code></p>
+                        </div>
+                    </div>
+                    <span class="status-pill status-queued" id="queueStatusBadge">QUEUED</span>
+                </div>
+
+                <div class="queue-body">
+                    <div class="progress-track">
+                        <div class="progress-fill" id="queueProgressBar" style="width: 25%;"></div>
+                    </div>
+
+                    <div class="pipeline-steps">
+                        <div class="step-node active" id="stepNode1">
+                            <span class="node-circle">1</span>
+                            <span class="node-label">Queue</span>
+                        </div>
+                        <div class="step-node" id="stepNode2">
+                            <span class="node-circle">2</span>
+                            <span class="node-label">Worker</span>
+                        </div>
+                        <div class="step-node" id="stepNode3">
+                            <span class="node-circle">3</span>
+                            <span class="node-label">Reserved</span>
+                        </div>
+                        <div class="step-node" id="stepNode4">
+                            <span class="node-circle">4</span>
+                            <span class="node-label">Confirmed</span>
+                        </div>
+                    </div>
+
+                    <div class="queue-details-box">
+                        <div class="queue-detail-item">
+                            <span class="q-label">Current Phase</span>
+                            <strong class="q-val" id="queuePhaseText">Positioned in RabbitMQ broker queue</strong>
+                        </div>
+                        <div class="queue-detail-item">
+                            <span class="q-label">Reservation TTL</span>
+                            <strong class="q-val countdown-mono" id="queueExpiryText">5:00</strong>
+                        </div>
+                    </div>
+
+                    <div class="queue-action-box" id="queueActionBox" style="display:none;">
+                        <button class="btn btn-primary btn-full" id="confirmPaymentBtn" onclick="confirmFlashOrder()">
+                            ✅ Finalize & Pay ₹29,999
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ─── Off-Canvas Shopping Cart Drawer ─── -->
+    <div class="drawer-overlay" id="cartOverlay" onclick="toggleCartDrawer()"></div>
+    <aside class="cart-drawer" id="cartDrawer">
+        <div class="drawer-header">
+            <div class="drawer-title-group">
+                <h3>Shopping Cart</h3>
+                <span class="drawer-items-count" id="drawerCartCount">0 items</span>
+            </div>
+            <button class="drawer-close-btn" onclick="toggleCartDrawer()">✕</button>
+        </div>
+
+        <div class="drawer-body">
+            <div class="cart-empty-state" id="cartEmptyState">
+                <span class="empty-cart-icon">🛒</span>
+                <h4>Your cart is empty</h4>
+                <p>Discover our curated hardware catalog and flash deals.</p>
+                <button class="btn btn-secondary btn-sm" onclick="toggleCartDrawer()">Continue Shopping</button>
+            </div>
+
+            <div class="cart-items-list" id="cartItemsList">
+                <!-- Rendered dynamically -->
+            </div>
+        </div>
+
+        <div class="drawer-footer" id="cartFooter" style="display:none;">
+            <!-- Coupon Input -->
+            <div class="coupon-section">
+                <div class="coupon-input-group">
+                    <input type="text" id="couponCodeInput" placeholder="Coupon Code" style="text-transform: uppercase;">
+                    <button class="btn btn-secondary btn-sm" onclick="applyCouponCode()">Apply</button>
+                </div>
+                <div class="coupon-hint" onclick="usePresetCoupon('FESTIVAL10')">
+                    💡 Click to apply <strong>FESTIVAL10</strong> (10% OFF)
+                </div>
+                <div class="coupon-success" id="couponSuccessMsg" style="display:none;"></div>
+            </div>
+
+            <!-- Price Breakdown -->
+            <div class="cart-summary">
+                <div class="summary-line">
+                    <span>Subtotal</span>
+                    <span id="cartSubtotal">₹0</span>
+                </div>
+                <div class="summary-line discount-line" id="cartDiscountLine" style="display:none;">
+                    <span>Coupon Discount</span>
+                    <span id="cartDiscount">-₹0</span>
+                </div>
+                <div class="summary-line">
+                    <span>Express Shipping</span>
+                    <span class="free-shipping">FREE</span>
+                </div>
+                <hr class="summary-divider">
+                <div class="summary-line total-line">
+                    <span>Total</span>
+                    <span id="cartTotal">₹0</span>
+                </div>
+            </div>
+
+            <button class="btn btn-primary btn-full btn-large" onclick="openCheckoutModal()">
+                Proceed to Checkout →
+            </button>
+        </div>
+    </aside>
+
+    <!-- ─── Off-Canvas My Orders Drawer ─── -->
+    <div class="drawer-overlay" id="ordersOverlay" onclick="toggleOrdersDrawer()"></div>
+    <aside class="orders-drawer" id="ordersDrawer">
+        <div class="drawer-header">
+            <div class="drawer-title-group">
+                <h3>My Orders</h3>
+                <span class="drawer-items-count" id="ordersHeaderCount">0 orders</span>
+            </div>
+            <button class="drawer-close-btn" onclick="toggleOrdersDrawer()">✕</button>
+        </div>
+
+        <div class="drawer-body">
+            <div class="orders-list" id="ordersList">
+                <!-- Dynamically loaded -->
+            </div>
+        </div>
+    </aside>
+
+    <!-- ─── Checkout Modal ─── -->
+    <div class="modal-overlay" id="checkoutModal" style="display:none;">
+        <div class="modal-card checkout-modal-card">
+            <button class="modal-close" onclick="closeCheckoutModal()">✕</button>
+            <h2>Express Checkout</h2>
+            <p class="modal-subtitle">Review shipping address and place your order</p>
+
+            <form id="checkoutForm" onsubmit="handleCartCheckout(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="shipName" placeholder="Alex Morgan" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="shipPhone" placeholder="+91 98765 43210" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Street Address</label>
+                    <input type="text" id="shipAddress" placeholder="Suite 402, Tech Park Boulevard" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" id="shipCity" placeholder="Bengaluru" required>
+                    </div>
+                    <div class="form-group">
+                        <label>PIN Code</label>
+                        <input type="text" id="shipPin" placeholder="560100" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Payment Method</label>
+                    <div class="payment-options">
+                        <label class="pay-option">
+                            <input type="radio" name="payMethod" value="instant" checked>
+                            <span class="pay-label">⚡ Instant Verified Pay (Card / UPI)</span>
+                        </label>
+                        <label class="pay-option">
+                            <input type="radio" name="payMethod" value="cod">
+                            <span class="pay-label">📦 Cash on Delivery</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="checkout-final-summary">
+                    <span>Grand Total:</span>
+                    <strong id="checkoutFinalAmount">₹0</strong>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full btn-large" id="checkoutSubmitBtn">
+                    Place Order & Confirm Payment
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ─── Product Quick View Modal ─── -->
+    <div class="modal-overlay" id="quickViewModal" style="display:none;">
+        <div class="modal-card quick-view-card">
+            <button class="modal-close" onclick="closeQuickView()">✕</button>
+            <div class="quick-view-grid">
+                <div class="quick-view-image-box">
+                    <img src="" id="qvImage" alt="Product Image">
+                </div>
+                <div class="quick-view-details">
+                    <div class="qv-badge" id="qvBadge">NEW</div>
+                    <h2 id="qvTitle">Product Title</h2>
+                    <div class="qv-rating" id="qvRating">★★★★★ (4.9 · 1,200 reviews)</div>
+                    <p class="qv-desc" id="qvDescription"></p>
+
+                    <div class="qv-price-row">
+                        <span class="qv-price" id="qvPrice">₹0</span>
+                        <span class="qv-orig-price" id="qvOrigPrice">₹0</span>
+                        <span class="qv-discount" id="qvDiscount">0% OFF</span>
+                    </div>
+
+                    <div class="qv-stock-badge" id="qvStock">In Stock</div>
+
+                    <div class="qv-actions">
+                        <button class="btn btn-primary" id="qvAddToCartBtn">🛒 Add to Cart</button>
+                        <button class="btn btn-secondary" id="qvBuyNowBtn">⚡ Buy Now</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Account Details Modal ─── -->
+    <div class="modal-overlay" id="accountModal" style="display:none;">
+        <div class="modal-card">
+            <button class="modal-close" onclick="closeAccountModal()">✕</button>
+            <h2>Customer Profile</h2>
+            <div class="account-details-list">
+                <div class="acc-row">
+                    <span class="acc-label">Username</span>
+                    <span class="acc-val" id="accUsername">—</span>
+                </div>
+                <div class="acc-row">
+                    <span class="acc-label">Email Address</span>
+                    <span class="acc-val" id="accEmail">—</span>
+                </div>
+                <div class="acc-row">
+                    <span class="acc-label">Phone Verified</span>
+                    <span class="acc-val verified-badge" id="accPhone">—</span>
+                </div>
+                <div class="acc-row">
+                    <span class="acc-label">Account Age</span>
+                    <span class="acc-val" id="accAge">—</span>
+                </div>
+                <div class="acc-row">
+                    <span class="acc-label">Sale Eligibility</span>
+                    <span class="acc-val verified-badge" id="accEligible">✓ Verified & Eligible</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Auth Modal (Login / Register / 1-Click Demo) ─── -->
+    <div class="modal-overlay" id="authModal" style="display:none;">
+        <div class="modal-card auth-modal-card">
+            <button class="modal-close" onclick="closeAuthModal()">✕</button>
+            <h2 id="authTitle">Sign In to NEXUS</h2>
+            <p class="modal-subtitle">Access your cart, order history, and exclusive flash sales</p>
+
+            <!-- 1-Click Demo Users Switcher -->
+            <div class="demo-login-box">
+                <span class="demo-login-label">⚡ 1-Click Quick Demo Sign In:</span>
+                <div class="demo-buttons">
+                    <button type="button" class="demo-btn" onclick="quickDemoLogin('alice_demo')">Alice</button>
+                    <button type="button" class="demo-btn" onclick="quickDemoLogin('bob_demo')">Bob</button>
+                    <button type="button" class="demo-btn" onclick="quickDemoLogin('charlie_demo')">Charlie</button>
+                </div>
+            </div>
+
+            <div class="auth-separator"><span>OR ENTER CREDENTIALS</span></div>
+
+            <form id="authForm" onsubmit="handleAuth(event)">
+                <div class="form-group" id="emailGroup" style="display:none;">
+                    <label for="authEmail">Email</label>
+                    <input type="email" id="authEmail" placeholder="you@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="authUsername">Username</label>
+                    <input type="text" id="authUsername" placeholder="Enter username" required>
+                </div>
+                <div class="form-group">
+                    <label for="authPassword">Password</label>
+                    <input type="password" id="authPassword" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full btn-large" id="authSubmit">Sign In</button>
+                <p class="auth-toggle">
+                    <span id="authToggleText">New customer?</span>
+                    <a href="#" id="authToggleLink" onclick="toggleAuthMode(event)">Create an account</a>
+                </p>
+            </form>
+            <div class="auth-error" id="authError" style="display:none;"></div>
+        </div>
+    </div>
+
+    <!-- ─── Floating Toast Notifications ─── -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>
