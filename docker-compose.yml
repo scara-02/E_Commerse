@@ -1,0 +1,263 @@
+services:
+  # ─── 1. PostgreSQL Relational Database ───
+  postgres:
+    image: postgres:15-alpine
+    container_name: flash_sale_db
+    environment:
+      POSTGRES_DB: flash_sale
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── 2. Redis In-Memory Atomic Token Engine ───
+  redis:
+    image: redis:7.2-alpine
+    container_name: flash_sale_redis
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy noeviction
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── 3. RabbitMQ Message Queue ───
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: flash_sale_mq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - mqdata:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # ─── 4. Database & Cache Initialization ───
+  db-init:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flash_sale_init
+    command: ["sh", "-c", "node src/database/migrate.js && node src/database/seed.js && node src/database/seedRedis.js"]
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: flash_sale
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: "no"
+    healthcheck:
+      disable: true
+
+  # ─── 5. Horizontally Scaled API Server Replica 1 ───
+  api-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flash_sale_api_1
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      INSTANCE_ID: api-pod-1
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: flash_sale
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      TURNSTILE_ENABLED: "false" # Set true with live keys
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  # ─── 6. Horizontally Scaled API Server Replica 2 ───
+  api-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flash_sale_api_2
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      INSTANCE_ID: api-pod-2
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: flash_sale
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      TURNSTILE_ENABLED: "false"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  # ─── 7. Horizontally Scaled API Server Replica 3 ───
+  api-3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flash_sale_api_3
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      INSTANCE_ID: api-pod-3
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: flash_sale
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      TURNSTILE_ENABLED: "false"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  # ─── 7. NGINX Load Balancer & Edge Reverse Proxy ───
+  nginx-lb:
+    image: nginx:alpine
+    container_name: flash_sale_lb
+    ports:
+      - "80:80"
+      - "3000:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      api-1:
+        condition: service_healthy
+      api-2:
+        condition: service_healthy
+      api-3:
+        condition: service_healthy
+    restart: always
+
+  # ─── 8. Background Queue Consumer Worker ───
+  order-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flash_sale_worker
+    command: ["node", "src/workers/orderWorker.js"]
+    environment:
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: flash_sale
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    healthcheck:
+      disable: true
+
+  # ─── 9. Background 5-Minute TTL Reconciler Worker ───
+  ttl-reconciler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flash_sale_reconciler
+    command: ["node", "src/workers/reconciler.js"]
+    environment:
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: flash_sale
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    healthcheck:
+      disable: true
+
+volumes:
+  pgdata:
+  redisdata:
+  mqdata:
